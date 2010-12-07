@@ -1,0 +1,85 @@
+<?xml version="1.0"?>
+<s:Application xmlns:fx="http://ns.adobe.com/mxml/2009" xmlns:s="library://ns.adobe.com/flex/spark" xmlns:mx="library://ns.adobe.com/flex/mx">
+
+  <fx:Script>
+
+    private function updateURL():void
+    {
+      var newURL:String = getCurrentUrl();
+      var i:Number = newURL.lastIndexOf("/");
+      newURL = newURL.substring(0, i + 1);
+      newURL += tb.selectedItem;
+      ExternalInterface.call("doReplaceState", newURL);
+    }
+
+    private function updateApp(url:String):void
+    {
+      var t:String = getCurrentStateFromUrl(url);
+      var itemIndex:int = (tb.dataProvider as ArrayCollection).getItemIndex(t);
+      if (itemIndex != -1)
+      {
+        tb.selectedIndex = vs.selectedIndex = itemIndex;
+      }
+    }
+
+    private function getCurrentUrl():String
+    {
+      var s:String = ExternalInterface.call("eval", "window.location.href");
+      return s;
+    }
+
+    private function getCurrentStateFromUrl(url:String):String
+    {
+      var i:Number = url.lastIndexOf("/");
+      return url.substring(i+1);
+    }
+
+  </fx:Script>
+
+  <s:applicationComplete>
+    ExternalInterface.addCallback("updateApp", updateApp);
+
+
+    if ((tb.dataProvider as ArrayCollection).getItemIndex(getCurrentStateFromUrl(getCurrentUrl())) != -1)
+    {
+      // state found in url
+      updateApp(getCurrentUrl());
+    }
+    else
+    {
+      // no state found in url
+      updateURL();
+    }
+  </s:applicationComplete>
+
+  <s:layout>
+    <s:VerticalLayout gap="-1" paddingTop="10" paddingLeft="10"/>
+  </s:layout>
+
+  <s:TabBar id="tb">
+    <s:dataProvider>
+      <s:ArrayCollection>
+        <fx:String>Tab1</fx:String>
+        <fx:String>Tab2</fx:String>
+      </s:ArrayCollection>
+    </s:dataProvider>
+    <s:change>
+      vs.selectedIndex = event.currentTarget.selectedIndex;
+      updateURL();
+    </s:change>
+  </s:TabBar>
+
+  <mx:ViewStack id="vs" width="300">
+    <s:NavigatorContent width="100%" height="100%">
+      <s:BorderContainer borderColor="#000000" borderWeight="1" width="100%" height="100%" backgroundColor="#00ff00">
+        <s:Label text="Label in Tab1" top="10" left="10"/>
+      </s:BorderContainer>
+    </s:NavigatorContent>
+    <s:NavigatorContent width="100%">
+      <s:BorderContainer borderColor="#000000" borderWeight="1" width="100%" height="100%" backgroundColor="#0000ff">
+        <s:Button label="Button in Tab2" top="10" left="10"/>
+      </s:BorderContainer>
+    </s:NavigatorContent>
+</mx:ViewStack>
+
+</s:Application>
